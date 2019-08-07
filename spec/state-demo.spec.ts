@@ -1,10 +1,5 @@
-# Small State Machine
+import { SmallStateMachine } from '../src/small-state-machine';
 
-State machine with simple syntax and usage.
-
-TypeScript example:
-
-```typescript
 enum States {
     Sunshine = 'Sunshine',
     Rain = 'Rain',
@@ -25,5 +20,14 @@ machine.configure( States.Rain )
     .permit( Triggers.dispelClouds, States.Sunshine );
 
 machine.fire( Triggers.makeClouds );
-```
 
+describe( 'Demo state machine', () => {
+    it( 'returns to sunny', ( done ) => {
+        machine.configure( States.Sunshine )
+            .onEntry( () => {
+                expect( true ).toBe( true );
+                done();
+            } );
+        machine.fire( Triggers.dispelClouds );
+    } );
+} );
