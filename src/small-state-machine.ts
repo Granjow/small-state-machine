@@ -32,7 +32,7 @@ export class SmallStateMachine<States, Triggers> {
         if ( transitionResult.ignoreTransition ) {
             return;
         }
-        if ( !targetState ) throw new Error( `Trigger ${trigger} is not permitted on state ${this._currentState}.` );
+        if ( targetState === undefined) throw new Error( `Trigger ${trigger} is not permitted on state ${this._currentState}.` );
 
 
         const targetStateDescription = this._stateDescriptions.get( targetState );

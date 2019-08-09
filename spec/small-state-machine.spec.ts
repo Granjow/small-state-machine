@@ -8,7 +8,7 @@ describe( 'Small state machine', () => {
     }
 
     enum Triggers {
-        a, b,
+        a,
     }
 
     it( 'can be constructed', () => {
