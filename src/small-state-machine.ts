@@ -23,6 +23,14 @@ export class SmallStateMachine<States, Triggers> {
 
 
     fire( trigger : Triggers ) {
+        if ( this._callbackRunning ) {
+            throw new AsyncError( 'fire() is already running! ' +
+                'This probably means that a state change was triggered from an enter() or exit() callback. ' +
+                'Use setImmediate() or setTimeout() for triggering inside a callback.' );
+        }
+
+        this._callbackRunning = true;
+
         const currentStateDescription = this._stateDescriptions.get( this._currentState );
         if ( !currentStateDescription ) throw new Error( `State ${this._currentState} has not been configured.` );
 
@@ -32,7 +40,7 @@ export class SmallStateMachine<States, Triggers> {
         if ( transitionResult.ignoreTransition ) {
             return;
         }
-        if ( targetState === undefined) throw new Error( `Trigger ${trigger} is not permitted on state ${this._currentState}.` );
+        if ( targetState === undefined ) throw new Error( `Trigger ${trigger} is not permitted on state ${this._currentState}.` );
 
 
         const targetStateDescription = this._stateDescriptions.get( targetState );
@@ -42,11 +50,15 @@ export class SmallStateMachine<States, Triggers> {
         targetStateDescription.enter();
 
         this._currentState = targetState;
+        this._callbackRunning = false;
     }
 
 
     private _stateDescriptions : Map<States, SmallStateDescription<States, Triggers>> = new Map();
     private _currentState : States;
+
+    private _callbackRunning : boolean = false;
+
     private readonly _initialState : States;
 
 }
@@ -75,6 +87,9 @@ export class SmallStateDescription<States, Triggers> {
         return this;
     }
 
+    /**
+     * Ignore this trigger so it will not throw an error.
+     */
     ignore( trigger : Triggers ) : SmallStateDescription<States, Triggers> {
         if ( this._transitions.has( trigger ) ) throw new Error( `Trigger ${trigger} is already configured, cannot ignore it.` );
         if ( this._ignoredTriggers.has( trigger ) ) throw new Error( `Trigger ${trigger} is already ignored.` );
@@ -82,6 +97,9 @@ export class SmallStateDescription<States, Triggers> {
         return this;
     }
 
+    /**
+     * Describes what would happen with this trigger, e.g. target stat
+     */
     whenFired( trigger : Triggers ) : TransitionResult<States> {
         if ( this._ignoredTriggers.has( trigger ) ) return { targetState: this._state, ignoreTransition: true };
         return { targetState: this._transitions.get( trigger ), ignoreTransition: false };
@@ -101,8 +119,12 @@ export class SmallStateDescription<States, Triggers> {
 
     private _entryHandler : Function;
     private _exitHandler : Function;
+
     private readonly _state : States;
     private readonly _ignoredTriggers : Set<Triggers> = new Set();
     private readonly _transitions : Map<Triggers, States> = new Map();
 
+}
+
+export class AsyncError extends Error {
 }
