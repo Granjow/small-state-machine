@@ -19,6 +19,14 @@
   ],
   "author": "Simon A. Eugster <simon.eu@gmail.com>",
   "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/Granjow/small-state-machine.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Granjow/ssmall-state-machine/issues"
+  },
+  "homepage": "https://github.com/Granjow/small-state-machine#readme",
   "devDependencies": {
     "@types/node": "^12.0.10",
     "jasmine": "^3.4.0",
