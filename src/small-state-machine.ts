@@ -30,9 +30,17 @@ export class SmallStateMachine<States, Triggers> {
         }
 
         this._callbackRunning = true;
+        const error = this._handleFire( trigger );
+        this._callbackRunning = false;
+
+        if ( error ) throw error;
+    }
+
+
+    private _handleFire( trigger : Triggers ) : Error {
 
         const currentStateDescription = this._stateDescriptions.get( this._currentState );
-        if ( !currentStateDescription ) throw new Error( `State ${this._currentState} has not been configured.` );
+        if ( !currentStateDescription ) return new Error( `State ${this._currentState} has not been configured.` );
 
         const transitionResult : TransitionResult<States> = currentStateDescription.whenFired( trigger );
 
@@ -40,17 +48,16 @@ export class SmallStateMachine<States, Triggers> {
         if ( transitionResult.ignoreTransition ) {
             return;
         }
-        if ( targetState === undefined ) throw new Error( `Trigger ${trigger} is not permitted on state ${this._currentState}.` );
+        if ( targetState === undefined ) return new Error( `Trigger ${trigger} is not permitted on state ${this._currentState}.` );
 
 
         const targetStateDescription = this._stateDescriptions.get( targetState );
-        if ( !targetStateDescription ) throw new Error( `Target state ${targetState} has not been configured.` );
+        if ( !targetStateDescription ) return new Error( `Target state ${targetState} has not been configured.` );
 
         currentStateDescription.exit();
         targetStateDescription.enter();
 
         this._currentState = targetState;
-        this._callbackRunning = false;
     }
 
 

@@ -9,6 +9,7 @@ describe( 'Small state machine', () => {
 
     enum Triggers {
         a,
+        b,
     }
 
     it( 'can be constructed', () => {
@@ -55,6 +56,40 @@ describe( 'Small state machine', () => {
 
         expect( () => sm.fire( Triggers.a ) ).not.toThrow();
         expect( sm.currentState ).toBe( States.A );
+    } );
+
+    describe( 'Recursive fire()', () => {
+
+        it( 'is disallowed and fires AsyncError', () => {
+            const sm : SmallStateMachine<States, Triggers> = new SmallStateMachine( States.A );
+            sm.configure( States.A )
+                .permit( Triggers.a, States.B )
+                .onExit( () => sm.fire( Triggers.b ) );
+            sm.configure( States.B );
+
+            expect( () => sm.fire( Triggers.a ) ).toThrow();
+            try {
+                sm.fire( Triggers.a )
+            } catch ( err ) {
+                expect( err instanceof AsyncError ).toBe( true );
+            }
+
+        } );
+
+        it( 'detection is not triggered when using disallowed transition', () => {
+            const sm : SmallStateMachine<States, Triggers> = new SmallStateMachine( States.A );
+            sm.configure( States.A );
+
+            expect( () => sm.fire( Triggers.a ) ).toThrow();
+
+            try {
+                sm.fire( Triggers.a )
+            } catch ( err ) {
+                expect( err instanceof AsyncError ).toBe( false,'should not be an async error' );
+            }
+
+        } );
+
     } );
 
 } );
