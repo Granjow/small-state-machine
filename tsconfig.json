@@ -8,6 +8,7 @@
     "declaration": true,
     "outDir": "dist",
     "moduleResolution": "node",
+    "strict": true,
     "target": "ES6",
     "lib": [
      "es2018"

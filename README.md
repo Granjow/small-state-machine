@@ -27,3 +27,9 @@ machine.configure( States.Rain )
 machine.fire( Triggers.makeClouds );
 ```
 
+## Changelog
+
+### v1.1.0 – 2021-03-29
+
+* Changed: `whenFired` throws if the transition has no target state.
+* Changed: Dependencies updated, moved `@types/jasmine` to dev dependencies

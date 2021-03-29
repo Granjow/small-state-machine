@@ -14,11 +14,10 @@ export class SmallStateMachine<States, Triggers> {
         return this._currentState;
     }
 
-    configure( state : States ) {
-        if ( !this._stateDescriptions.has( state ) ) {
-            this._stateDescriptions.set( state, new SmallStateDescription<States, Triggers>( state ) );
-        }
-        return this._stateDescriptions.get( state );
+    configure( state : States ) : SmallStateDescription<States, Triggers> {
+        const description = this._stateDescriptions.get( state ) ?? new SmallStateDescription<States, Triggers>( state );
+        this._stateDescriptions.set( state, description );
+        return description;
     }
 
 
@@ -37,12 +36,17 @@ export class SmallStateMachine<States, Triggers> {
     }
 
 
-    private _handleFire( trigger : Triggers ) : Error {
+    private _handleFire( trigger : Triggers ) : Error | undefined {
 
         const currentStateDescription = this._stateDescriptions.get( this._currentState );
         if ( !currentStateDescription ) return new Error( `State ${this._currentState} has not been configured.` );
 
-        const transitionResult : TransitionResult<States> = currentStateDescription.whenFired( trigger );
+        let transitionResult : TransitionResult<States>;
+        try {
+            transitionResult = currentStateDescription.whenFired( trigger );
+        } catch (err) {
+            return new Error( err.message );
+        }
 
         const targetState = transitionResult.targetState;
         if ( transitionResult.ignoreTransition ) {
@@ -109,7 +113,9 @@ export class SmallStateDescription<States, Triggers> {
      */
     whenFired( trigger : Triggers ) : TransitionResult<States> {
         if ( this._ignoredTriggers.has( trigger ) ) return { targetState: this._state, ignoreTransition: true };
-        return { targetState: this._transitions.get( trigger ), ignoreTransition: false };
+        const targetState = this._transitions.get( trigger );
+        if ( targetState === undefined ) throw new Error( `No target state for trigger ${trigger}` );
+        return { targetState, ignoreTransition: false };
     }
 
     enter() {
@@ -124,8 +130,8 @@ export class SmallStateDescription<States, Triggers> {
         }
     }
 
-    private _entryHandler : Function;
-    private _exitHandler : Function;
+    private _entryHandler : Function | undefined;
+    private _exitHandler : Function | undefined;
 
     private readonly _state : States;
     private readonly _ignoredTriggers : Set<Triggers> = new Set();
