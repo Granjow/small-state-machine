@@ -1,3 +1,5 @@
+import { EventEmitter } from "events";
+
 interface TransitionResult<States> {
     targetState : States;
     ignoreTransition : boolean;
@@ -20,7 +22,6 @@ export class SmallStateMachine<States, Triggers> {
         return description;
     }
 
-
     fire( trigger : Triggers ) {
         if ( this._callbackRunning ) {
             throw new AsyncError( 'fire() is already running! ' +
@@ -29,37 +30,46 @@ export class SmallStateMachine<States, Triggers> {
         }
 
         this._callbackRunning = true;
-        const error = this._handleFire( trigger );
+        let error : Error | undefined;
+        try {
+            this._handleFire( trigger );
+        } catch ( err ) {
+            error = err;
+        }
         this._callbackRunning = false;
 
         if ( error ) throw error;
     }
 
+    onStateChange( cb : ( newState : States ) => void ) : void {
+        this._events.on( 'new-state', cb );
+    }
 
-    private _handleFire( trigger : Triggers ) : Error | undefined {
+
+    private _handleFire( trigger : Triggers ) : void {
 
         const currentStateDescription = this._stateDescriptions.get( this._currentState );
-        if ( !currentStateDescription ) return new Error( `State ${this._currentState} has not been configured.` );
-
-        let transitionResult : TransitionResult<States>;
-        try {
-            transitionResult = currentStateDescription.whenFired( trigger );
-        } catch (err) {
-            return new Error( err.message );
+        if ( !currentStateDescription ) {
+            throw new Error( `State ${this._currentState} has not been configured.` );
         }
 
+        const transitionResult = currentStateDescription.whenFired( trigger );
         const targetState = transitionResult.targetState;
         if ( transitionResult.ignoreTransition ) {
             return;
         }
-        if ( targetState === undefined ) return new Error( `Trigger ${trigger} is not permitted on state ${this._currentState}.` );
-
 
         const targetStateDescription = this._stateDescriptions.get( targetState );
-        if ( !targetStateDescription ) return new Error( `Target state ${targetState} has not been configured.` );
+        if ( !targetStateDescription ) {
+            throw new Error( `Target state ${targetState} has not been configured.` );
+        }
 
         currentStateDescription.exit();
         targetStateDescription.enter();
+
+        if ( this._currentState !== targetState ) {
+            this._events.emit( 'new-state', targetState );
+        }
 
         this._currentState = targetState;
     }
@@ -72,6 +82,7 @@ export class SmallStateMachine<States, Triggers> {
 
     private readonly _initialState : States;
 
+    private readonly _events = new EventEmitter();
 }
 
 export class SmallStateDescription<States, Triggers> {
@@ -109,13 +120,25 @@ export class SmallStateDescription<States, Triggers> {
     }
 
     /**
-     * Describes what would happen with this trigger, e.g. target stat
+     * Describes what would happen with this trigger, e.g. target state
      */
     whenFired( trigger : Triggers ) : TransitionResult<States> {
-        if ( this._ignoredTriggers.has( trigger ) ) return { targetState: this._state, ignoreTransition: true };
+        if ( this._ignoredTriggers.has( trigger ) ) {
+            return {
+                targetState: this._state,
+                ignoreTransition: true
+            };
+        }
+
         const targetState = this._transitions.get( trigger );
-        if ( targetState === undefined ) throw new Error( `No target state for trigger ${trigger}` );
-        return { targetState, ignoreTransition: false };
+        if ( targetState === undefined ) {
+            throw new Error( `No target state for trigger ${trigger}` );
+        }
+
+        return {
+            targetState,
+            ignoreTransition: false
+        };
     }
 
     enter() {

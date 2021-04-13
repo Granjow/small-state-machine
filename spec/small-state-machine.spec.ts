@@ -58,6 +58,19 @@ describe( 'Small state machine', () => {
         expect( sm.currentState ).toBe( States.A );
     } );
 
+    describe( 'Setup', () => {
+        it( 'throws when ignoring a trigger twice', () => {
+            const sm : SmallStateMachine<States, Triggers> = new SmallStateMachine( States.A );
+            const definition = sm.configure( States.A ).ignore( Triggers.a );
+            expect( () => definition.ignore( Triggers.a ) ).toThrow( 'already ignored' );
+        } );
+        it( 'throws when ignoring an existing trigger', () => {
+            const sm : SmallStateMachine<States, Triggers> = new SmallStateMachine( States.A );
+            const definition = sm.configure( States.A ).permit( Triggers.a, States.B );
+            expect( () => definition.ignore( Triggers.a ) ).toThrow( 'already configured' );
+        } );
+    } );
+
     describe( 'Recursive fire()', () => {
 
         it( 'is disallowed and fires AsyncError', () => {
@@ -85,14 +98,74 @@ describe( 'Small state machine', () => {
             try {
                 sm.fire( Triggers.a )
             } catch ( err ) {
-                expect( err instanceof AsyncError ).toBe( false,'should not be an async error' );
+                expect( err instanceof AsyncError ).toBe( false );
             }
 
         } );
 
     } );
 
+    describe( 'state change events', () => {
+        it( 'emits event on state change', ( done ) => {
+            const sm : SmallStateMachine<States, Triggers> = new SmallStateMachine( States.A );
+            sm.configure( States.A )
+                .permit( Triggers.a, States.B );
+            sm.configure( States.B );
+
+            sm.onStateChange( ( newState ) => {
+                expect( newState ).toEqual( States.B );
+                done();
+            } );
+            sm.fire( Triggers.a );
+        } );
+
+        it( 'does not emit event when staying in same state', ( done ) => {
+            const sm : SmallStateMachine<States, Triggers> = new SmallStateMachine( States.A );
+            sm.configure( States.A )
+                .permit( Triggers.b, States.B );
+            sm.configure( States.B )
+                .permit( Triggers.a, States.A )
+                .permit( Triggers.b, States.B );
+
+            let stateChangeCount = 0;
+            sm.onStateChange( ( newState ) => {
+                if ( stateChangeCount === 0 ) {
+                    stateChangeCount++;
+                    expect( newState ).toEqual( States.B );
+                } else {
+                    expect( newState ).toEqual( States.A );
+                    done();
+                }
+            } );
+            sm.fire( Triggers.b );
+            sm.fire( Triggers.b );
+            sm.fire( Triggers.a );
+        } );
+    } );
+
+    describe( 'Error handling', () => {
+        it( 'throws if target state is not configured', () => {
+            const sm : SmallStateMachine<States, Triggers> = new SmallStateMachine( States.A );
+            sm.configure( States.A )
+                .permit( Triggers.b, States.B );
+
+            expect( () => sm.fire( Triggers.b ) ).toThrow( 'not been configured' );
+        } );
+        it( 'throws if trigger is not defined', () => {
+            const sm : SmallStateMachine<States, Triggers> = new SmallStateMachine( States.A );
+            sm.configure( States.A );
+
+            expect( () => sm.fire( Triggers.b ) ).toThrow( 'No target state' );
+        } );
+        it( 'throws if initial state is not configured', () => {
+            const sm : SmallStateMachine<States, Triggers> = new SmallStateMachine( States.A );
+
+            expect( () => sm.fire( Triggers.a ) ).toThrow( 'State 0 has not been configured' );
+        } );
+    } );
+
 } );
+
 
 describe( 'Number enums', () => {
 
@@ -150,7 +223,7 @@ describe( 'Async behaviour', () => {
             sm.fire( Triggers.shredder );
             expect( 'trigger' ).toBe( 'throwing an error' );
         } catch ( e ) {
-            expect( e instanceof AsyncError ).toBe( true, 'Expecting an AsyncError' );
+            expect( e instanceof AsyncError ).toBe( true );
         }
 
     } );
@@ -172,7 +245,7 @@ describe( 'Async behaviour', () => {
             sm.fire( Triggers.shredder );
             expect( 'trigger' ).toBe( 'throwing an error' );
         } catch ( e ) {
-            expect( e instanceof AsyncError ).toBe( true, 'Expecting an AsyncError' );
+            expect( e instanceof AsyncError ).toBe( true );
         }
 
     } );

@@ -1,4 +1,6 @@
 *.tgz
+coverage
 dist
-.idea
 node_modules
+.idea/*.xml
+.idea/*.iml
