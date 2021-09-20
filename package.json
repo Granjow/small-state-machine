@@ -1,6 +1,6 @@
 {
   "name": "small-state-machine",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Small and simple state machine",
   "main": "dist/src/small-state-machine.js",
   "types": "dist/src/small-state-machine.d.ts",
