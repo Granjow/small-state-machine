@@ -30,7 +30,7 @@ export class SmallStateMachine<States, Triggers> {
         }
 
         this._callbackRunning = true;
-        let error : Error | undefined;
+        let error : any;
         try {
             this._handleFire( trigger );
         } catch ( err ) {
