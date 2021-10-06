@@ -31,6 +31,10 @@ machine.fire( Triggers.makeClouds );
 
 ## Changelog
 
+### v1.2.2 
+
+* Added source code documentation.
+
 ### v1.2.0 – 2021-04-13
 
 * Added `SmallStateMachine.onStateChange` to listen to state changes
