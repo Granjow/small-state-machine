@@ -5,6 +5,8 @@ State machine with simple syntax and usage.
 TypeScript example:
 
 ```typescript
+import SmallStateMachine from 'small-state-machine'
+
 enum States {
     Sunshine = 'Sunshine',
     Rain = 'Rain',
@@ -30,6 +32,10 @@ machine.fire( Triggers.makeClouds );
 ```
 
 ## Changelog
+
+### upcoming
+
+* Added default export for SmallStateMachine
 
 ### v1.2.2 
 

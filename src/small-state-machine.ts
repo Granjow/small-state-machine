@@ -116,8 +116,8 @@ export class SmallStateDescription<States, Triggers> {
 
     /**
      * Defines a callback that is called when entering this state.
-     * Note that only one entry callback can be used, and it will not be called for when initialising
-     * the state machine with the initial state.
+     * Note that only one entry callback can be used, and it will not be called when the state machine is initialised
+     * with its initial state.
      * @param f Callback
      */
     onEntry( f : () => void ) : SmallStateDescription<States, Triggers> {
@@ -207,3 +207,5 @@ export class SmallStateDescription<States, Triggers> {
 
 export class AsyncError extends Error {
 }
+
+export default SmallStateMachine;

@@ -1,4 +1,4 @@
-import { AsyncError, SmallStateMachine } from '../src/small-state-machine';
+import SmallStateMachine, { AsyncError } from '../src/small-state-machine';
 
 describe( 'Small state machine', () => {
 
