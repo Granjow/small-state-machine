@@ -33,7 +33,7 @@ machine.fire( Triggers.makeClouds );
 
 ## Changelog
 
-### upcoming
+### v1.3.0
 
 * Added default export for SmallStateMachine
 * Improved error message on nested fire() calls
