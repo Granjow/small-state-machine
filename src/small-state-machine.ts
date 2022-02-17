@@ -5,7 +5,7 @@ interface TransitionResult<States> {
     ignoreTransition : boolean;
 }
 
-export class SmallStateMachine<States, Triggers> {
+export class SmallStateMachine<States extends ( string | number ), Triggers extends ( string | number )> {
 
     /**
      * Creates a new state which uses the provided state as initial state.
@@ -42,20 +42,18 @@ export class SmallStateMachine<States, Triggers> {
      * @param trigger Event to trigger
      */
     fire( trigger : Triggers ) {
-        if ( this._callbackRunning ) {
-            throw new AsyncError( 'fire() is already running! ' +
-                'This probably means that a state change was triggered from an enter() or exit() callback. ' +
-                'Use setImmediate() or setTimeout() for triggering inside a callback.' );
+        if ( this._fireRunning !== undefined ) {
+            throw new AsyncError( `Error in fire(${trigger}): fire(${this._fireRunning}) is already running! This probably means that a state change was triggered from an enter() or exit() callback. Use setImmediate() or setTimeout() for triggering inside a callback.` );
         }
 
-        this._callbackRunning = true;
+        this._fireRunning = trigger;
         let error : any;
         try {
             this._handleFire( trigger );
         } catch ( err ) {
             error = err;
         }
-        this._callbackRunning = false;
+        this._fireRunning = undefined;
 
         if ( error ) throw error;
     }
@@ -101,7 +99,7 @@ export class SmallStateMachine<States, Triggers> {
     private _stateDescriptions : Map<States, SmallStateDescription<States, Triggers>> = new Map();
     private _currentState : States;
 
-    private _callbackRunning : boolean = false;
+    private _fireRunning : string | number | undefined = undefined;
 
     private readonly _initialState : States;
 
