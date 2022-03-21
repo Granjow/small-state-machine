@@ -154,8 +154,8 @@ export class SmallStateDescription<States, Triggers> {
      * Ignore this trigger so it will not throw an error.
      */
     ignore( trigger : Triggers ) : SmallStateDescription<States, Triggers> {
-        if ( this._transitions.has( trigger ) ) throw new Error( `Trigger ${trigger} is already configured, cannot ignore it.` );
-        if ( this._ignoredTriggers.has( trigger ) ) throw new Error( `Trigger ${trigger} is already ignored.` );
+        if ( this._transitions.has( trigger ) ) throw new Error( `Trigger ${trigger} is already configured, cannot ignore it in state ${this._state}.` );
+        if ( this._ignoredTriggers.has( trigger ) ) throw new Error( `Trigger ${trigger} is already ignored in state ${this._state}.` );
         this._ignoredTriggers.add( trigger );
         return this;
     }
@@ -173,7 +173,7 @@ export class SmallStateDescription<States, Triggers> {
 
         const targetState = this._transitions.get( trigger );
         if ( targetState === undefined ) {
-            throw new Error( `No target state for trigger ${trigger}` );
+            throw new Error( `No target state for trigger ${trigger} from state ${this._state}` );
         }
 
         return {
