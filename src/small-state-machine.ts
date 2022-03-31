@@ -1,4 +1,5 @@
 import { EventEmitter } from "events";
+import { ILogger } from "./i-logger";
 
 interface TransitionResult<States> {
     targetState : States;
@@ -10,8 +11,10 @@ export class SmallStateMachine<States extends ( string | number ), Triggers exte
     /**
      * Creates a new state which uses the provided state as initial state.
      * @param initialState Initial state
+     * @param logger Optional logger
      */
-    constructor( initialState : States ) {
+    constructor( initialState : States, logger? : ILogger ) {
+        this._logger = logger;
         this._initialState = initialState;
         this._currentState = initialState;
     }
@@ -26,7 +29,7 @@ export class SmallStateMachine<States extends ( string | number ), Triggers exte
      * @param state State to configure
      */
     configure( state : States ) : SmallStateDescription<States, Triggers> {
-        const description = this._stateDescriptions.get( state ) ?? new SmallStateDescription<States, Triggers>( state );
+        const description = this._stateDescriptions.get( state ) ?? new SmallStateDescription( state, this._logger );
         this._stateDescriptions.set( state, description );
         return description;
     }
@@ -42,6 +45,7 @@ export class SmallStateMachine<States extends ( string | number ), Triggers exte
      * @param trigger Event to trigger
      */
     fire( trigger : Triggers ) {
+        this._logger?.trace( `Entering fire(${trigger}) in state ${this._currentState}` );
         if ( this._fireRunning !== undefined ) {
             throw new AsyncError( `Error in fire(${trigger}): fire(${this._fireRunning}) is already running! This probably means that a state change was triggered from an enter() or exit() callback. Use setImmediate() or setTimeout() for triggering inside a callback.` );
         }
@@ -54,6 +58,8 @@ export class SmallStateMachine<States extends ( string | number ), Triggers exte
             error = err;
         }
         this._fireRunning = undefined;
+
+        this._logger?.trace( `Exiting fire(${trigger}) in state ${this._currentState}. Throwing error: ${error !== undefined}` );
 
         if ( error ) throw error;
     }
@@ -89,7 +95,7 @@ export class SmallStateMachine<States extends ( string | number ), Triggers exte
         targetStateDescription.enter();
 
         if ( this._currentState !== targetState ) {
-            this._events.emit( 'new-state', targetState );
+            setImmediate( () => this._events.emit( 'new-state', targetState ) );
         }
 
         this._currentState = targetState;
@@ -104,12 +110,14 @@ export class SmallStateMachine<States extends ( string | number ), Triggers exte
     private readonly _initialState : States;
 
     private readonly _events = new EventEmitter();
+    private readonly _logger : ILogger | undefined;
 }
 
 export class SmallStateDescription<States, Triggers> {
 
-    constructor( state : States ) {
+    constructor( state : States, logger? : ILogger ) {
         this._state = state;
+        this._logger = logger;
     }
 
     /**
@@ -183,15 +191,19 @@ export class SmallStateDescription<States, Triggers> {
     }
 
     enter() {
+        this._logger?.trace( `Entering state ${this._state} …` );
         if ( this._entryHandler ) {
             this._entryHandler();
         }
+        this._logger?.trace( `Entered state ${this._state}` );
     }
 
     exit() {
+        this._logger?.trace( `Exiting state ${this._state} …` );
         if ( this._exitHandler ) {
             this._exitHandler();
         }
+        this._logger?.trace( `Exited state ${this._state}` );
     }
 
     private _entryHandler : Function | undefined;
@@ -200,7 +212,7 @@ export class SmallStateDescription<States, Triggers> {
     private readonly _state : States;
     private readonly _ignoredTriggers : Set<Triggers> = new Set();
     private readonly _transitions : Map<Triggers, States> = new Map();
-
+    private readonly _logger : ILogger | undefined;
 }
 
 export class AsyncError extends Error {

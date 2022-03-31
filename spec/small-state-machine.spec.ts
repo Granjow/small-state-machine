@@ -114,6 +114,7 @@ describe( 'Small state machine', () => {
 
             sm.onStateChange( ( newState ) => {
                 expect( newState ).toEqual( States.B );
+                expect( sm.currentState ).toEqual( States.B );
                 done();
             } );
             sm.fire( Triggers.a );
