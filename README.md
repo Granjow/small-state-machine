@@ -33,7 +33,15 @@ machine.fire( Triggers.makeClouds );
 
 ## Changelog
 
-* **v.4.0**
+* **v2.0.0**
+  * Breaking: Constructor now takes a parameters object as second parameter to
+    provide additional options like logger.
+  * Added: The state machine can be configured not to throw if a trigger has
+    not been configured on a state.
+  * Added: The `reset()` command resets the state machine to the initial state.
+    This is useful when using the state machine e.g. in the context of a [state
+    chart](https://statecharts.dev/).
+* **v1.4.0**
   * Added: Option for using a logger like [pino](https://www.npmjs.com/package/pino)
   * Fixed: The `StateMachine.currentState` is now the target state in the `onStateChange` event.
 * **v1.3.0**

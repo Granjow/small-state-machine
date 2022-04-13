@@ -144,6 +144,28 @@ describe( 'Small state machine', () => {
         } );
     } );
 
+    describe( 'Reset', () => {
+        it( 'resets to initial state', ( done ) => {
+            const sm : SmallStateMachine<States, Triggers> = new SmallStateMachine( States.A );
+            sm.configure( States.A )
+                .permit( Triggers.a, States.B );
+            sm.configure( States.B );
+
+            sm.fire( Triggers.a );
+
+            setTimeout( () => {
+                sm.onStateChange( ( newState ) => {
+                    expect( newState ).toEqual( States.A );
+                    expect( sm.currentState ).toEqual( States.A );
+                    done();
+                } );
+
+                sm.reset();
+            }, 10 );
+
+        } );
+    } );
+
     describe( 'Error handling', () => {
         it( 'throws if target state is not configured', () => {
             const sm : SmallStateMachine<States, Triggers> = new SmallStateMachine( States.A );
@@ -158,6 +180,12 @@ describe( 'Small state machine', () => {
 
             expect( () => sm.fire( Triggers.b ) ).toThrow( 'No target state' );
         } );
+        it( 'does not throw if trigger is not defined and SM is configured not to throw', () => {
+            const sm : SmallStateMachine<States, Triggers> = new SmallStateMachine( States.A, { ignoreUnconfiguredTriggers: true } );
+            sm.configure( States.A );
+
+            expect( () => sm.fire( Triggers.b ) ).not.toThrow();
+        } )
         it( 'throws if initial state is not configured', () => {
             const sm : SmallStateMachine<States, Triggers> = new SmallStateMachine( States.A );
 

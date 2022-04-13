@@ -6,17 +6,23 @@ interface TransitionResult<States> {
     ignoreTransition : boolean;
 }
 
+export interface SmallStateMachineArgs {
+    logger? : ILogger;
+    ignoreUnconfiguredTriggers? : boolean;
+}
+
 export class SmallStateMachine<States extends ( string | number ), Triggers extends ( string | number )> {
 
     /**
      * Creates a new state which uses the provided state as initial state.
      * @param initialState Initial state
-     * @param logger Optional logger
+     * @param args Provide additional options for the state machine like a logger
      */
-    constructor( initialState : States, logger? : ILogger ) {
-        this._logger = logger;
+    constructor( initialState : States, args? : SmallStateMachineArgs ) {
+        this._logger = args?.logger;
         this._initialState = initialState;
         this._currentState = initialState;
+        this._ignoreUnconfiguredEvents = args?.ignoreUnconfiguredTriggers === true;
     }
 
     get currentState() : States {
@@ -72,6 +78,16 @@ export class SmallStateMachine<States extends ( string | number ), Triggers exte
         this._events.on( 'new-state', cb );
     }
 
+    /**
+     * Resets the state machine back to the initial state.
+     */
+    reset() : void {
+        if ( this._currentState !== this._initialState ) {
+            this._currentState = this._initialState;
+            setImmediate( () => this._events.emit( 'new-state', this._initialState ) );
+        }
+    }
+
 
     private _handleFire( trigger : Triggers ) : void {
 
@@ -80,7 +96,7 @@ export class SmallStateMachine<States extends ( string | number ), Triggers exte
             throw new Error( `State ${this._currentState} has not been configured.` );
         }
 
-        const transitionResult = currentStateDescription.whenFired( trigger );
+        const transitionResult = currentStateDescription.whenFired( trigger, this._ignoreUnconfiguredEvents );
         const targetState = transitionResult.targetState;
         if ( transitionResult.ignoreTransition ) {
             return;
@@ -111,6 +127,7 @@ export class SmallStateMachine<States extends ( string | number ), Triggers exte
 
     private readonly _events = new EventEmitter();
     private readonly _logger : ILogger | undefined;
+    private readonly _ignoreUnconfiguredEvents : boolean;
 }
 
 export class SmallStateDescription<States, Triggers> {
@@ -171,7 +188,7 @@ export class SmallStateDescription<States, Triggers> {
     /**
      * Describes what would happen with this trigger, e.g. target state
      */
-    whenFired( trigger : Triggers ) : TransitionResult<States> {
+    whenFired( trigger : Triggers, ignoreUnknown : boolean ) : TransitionResult<States> {
         if ( this._ignoredTriggers.has( trigger ) ) {
             return {
                 targetState: this._state,
@@ -181,6 +198,12 @@ export class SmallStateDescription<States, Triggers> {
 
         const targetState = this._transitions.get( trigger );
         if ( targetState === undefined ) {
+            if ( ignoreUnknown ) {
+                return {
+                    targetState: this._state,
+                    ignoreTransition: true,
+                };
+            }
             throw new Error( `No target state for trigger ${trigger} from state ${this._state}` );
         }
 
