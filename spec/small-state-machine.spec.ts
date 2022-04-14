@@ -162,7 +162,48 @@ describe( 'Small state machine', () => {
 
                 sm.reset();
             }, 10 );
+        } );
 
+        it( 'calls exit() on previous', ( done ) => {
+            const exitB = jest.fn();
+            const sm : SmallStateMachine<States, Triggers> = new SmallStateMachine( States.A );
+            sm.configure( States.A )
+                .permit( Triggers.a, States.B );
+            sm.configure( States.B )
+                .onExit( exitB );
+
+            sm.fire( Triggers.a );
+
+            setTimeout( () => {
+                sm.onStateChange( ( newState ) => {
+                    expect( newState ).toEqual( States.A );
+                    expect( exitB ).toHaveBeenCalledTimes( 1 );
+                    done();
+                } );
+
+                sm.reset();
+            }, 10 );
+        } );
+
+        it( 'calls enter() on initial state', ( done ) => {
+            const enterA = jest.fn();
+            const sm : SmallStateMachine<States, Triggers> = new SmallStateMachine( States.A );
+            sm.configure( States.A )
+                .onEntry( enterA )
+                .permit( Triggers.a, States.B );
+            sm.configure( States.B );
+
+            sm.fire( Triggers.a );
+
+            setTimeout( () => {
+                sm.onStateChange( ( newState ) => {
+                    expect( newState ).toEqual( States.A );
+                    expect( enterA ).toHaveBeenCalledTimes( 1 );
+                    done();
+                } );
+
+                sm.reset();
+            }, 10 );
         } );
     } );
 

@@ -1,10 +1,6 @@
 import { EventEmitter } from "events";
 import { ILogger } from "./i-logger";
-
-interface TransitionResult<States> {
-    targetState : States;
-    ignoreTransition : boolean;
-}
+import { SmallStateDescription } from "./small-state-description";
 
 export interface SmallStateMachineArgs {
     logger? : ILogger;
@@ -59,7 +55,7 @@ export class SmallStateMachine<States extends ( string | number ), Triggers exte
         this._fireRunning = trigger;
         let error : any;
         try {
-            this._handleFire( trigger );
+            this.handleFire( trigger );
         } catch ( err ) {
             error = err;
         }
@@ -83,31 +79,26 @@ export class SmallStateMachine<States extends ( string | number ), Triggers exte
      */
     reset() : void {
         if ( this._currentState !== this._initialState ) {
-            this._currentState = this._initialState;
-            setImmediate( () => this._events.emit( 'new-state', this._initialState ) );
+            this.transitionToState( this._initialState );
         }
     }
 
-
-    private _handleFire( trigger : Triggers ) : void {
-
+    private get currentStateDescription() : SmallStateDescription<States, Triggers> {
         const currentStateDescription = this._stateDescriptions.get( this._currentState );
         if ( !currentStateDescription ) {
             throw new Error( `State ${this._currentState} has not been configured.` );
         }
+        return currentStateDescription;
+    }
 
-        const transitionResult = currentStateDescription.whenFired( trigger, this._ignoreUnconfiguredEvents );
-        const targetState = transitionResult.targetState;
-        if ( transitionResult.ignoreTransition ) {
-            return;
-        }
+    private transitionToState( targetState : States ) : void {
 
         const targetStateDescription = this._stateDescriptions.get( targetState );
         if ( !targetStateDescription ) {
             throw new Error( `Target state ${targetState} has not been configured.` );
         }
 
-        currentStateDescription.exit();
+        this.currentStateDescription.exit();
         targetStateDescription.enter();
 
         if ( this._currentState !== targetState ) {
@@ -115,6 +106,16 @@ export class SmallStateMachine<States extends ( string | number ), Triggers exte
         }
 
         this._currentState = targetState;
+    }
+
+    private handleFire( trigger : Triggers ) : void {
+        const transitionResult = this.currentStateDescription.whenFired( trigger, this._ignoreUnconfiguredEvents );
+        const targetState = transitionResult.targetState;
+        if ( transitionResult.ignoreTransition ) {
+            return;
+        }
+
+        this.transitionToState( targetState );
     }
 
 
@@ -128,114 +129,6 @@ export class SmallStateMachine<States extends ( string | number ), Triggers exte
     private readonly _events = new EventEmitter();
     private readonly _logger : ILogger | undefined;
     private readonly _ignoreUnconfiguredEvents : boolean;
-}
-
-export class SmallStateDescription<States, Triggers> {
-
-    constructor( state : States, logger? : ILogger ) {
-        this._state = state;
-        this._logger = logger;
-    }
-
-    /**
-     * Defines a callback that is called when entering this state.
-     * Note that only one entry callback can be used, and it will not be called when the state machine is initialised
-     * with its initial state.
-     * @param f Callback
-     */
-    onEntry( f : () => void ) : SmallStateDescription<States, Triggers> {
-        this._entryHandler = f;
-        return this;
-    }
-
-    /**
-     * Defines a callback that is called when leaving this state, before entering the next state.
-     * See #onEntry
-     * @param f Callback
-     */
-    onExit( f : () => void ) : SmallStateDescription<States, Triggers> {
-        this._exitHandler = f;
-        return this;
-    }
-
-    /**
-     * Adds a state transition to the target state when the trigger/event is fired.
-     *
-     * When firing a trigger which is not permitted for that state, an error is thrown
-     * unless the trigger is ignored with #ignore.
-     *
-     * @param trigger Trigger to allow
-     * @param targetState Target state for the given trigger
-     */
-    permit( trigger : Triggers, targetState : States ) : SmallStateDescription<States, Triggers> {
-        if ( this._transitions.has( trigger ) ) {
-            throw new Error( `Trigger ${trigger} is already defined for state ${this._state}.` );
-        }
-        this._transitions.set( trigger, targetState );
-        return this;
-    }
-
-    /**
-     * Ignore this trigger so it will not throw an error.
-     */
-    ignore( trigger : Triggers ) : SmallStateDescription<States, Triggers> {
-        if ( this._transitions.has( trigger ) ) throw new Error( `Trigger ${trigger} is already configured, cannot ignore it in state ${this._state}.` );
-        if ( this._ignoredTriggers.has( trigger ) ) throw new Error( `Trigger ${trigger} is already ignored in state ${this._state}.` );
-        this._ignoredTriggers.add( trigger );
-        return this;
-    }
-
-    /**
-     * Describes what would happen with this trigger, e.g. target state
-     */
-    whenFired( trigger : Triggers, ignoreUnknown : boolean ) : TransitionResult<States> {
-        if ( this._ignoredTriggers.has( trigger ) ) {
-            return {
-                targetState: this._state,
-                ignoreTransition: true
-            };
-        }
-
-        const targetState = this._transitions.get( trigger );
-        if ( targetState === undefined ) {
-            if ( ignoreUnknown ) {
-                return {
-                    targetState: this._state,
-                    ignoreTransition: true,
-                };
-            }
-            throw new Error( `No target state for trigger ${trigger} from state ${this._state}` );
-        }
-
-        return {
-            targetState,
-            ignoreTransition: false
-        };
-    }
-
-    enter() {
-        this._logger?.trace( `Entering state ${this._state} …` );
-        if ( this._entryHandler ) {
-            this._entryHandler();
-        }
-        this._logger?.trace( `Entered state ${this._state}` );
-    }
-
-    exit() {
-        this._logger?.trace( `Exiting state ${this._state} …` );
-        if ( this._exitHandler ) {
-            this._exitHandler();
-        }
-        this._logger?.trace( `Exited state ${this._state}` );
-    }
-
-    private _entryHandler : Function | undefined;
-    private _exitHandler : Function | undefined;
-
-    private readonly _state : States;
-    private readonly _ignoredTriggers : Set<Triggers> = new Set();
-    private readonly _transitions : Map<Triggers, States> = new Map();
-    private readonly _logger : ILogger | undefined;
 }
 
 export class AsyncError extends Error {

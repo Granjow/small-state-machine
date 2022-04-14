@@ -33,6 +33,12 @@ machine.fire( Triggers.makeClouds );
 
 ## Changelog
 
+* **v2.1.0**
+  * Added: Transition can now have optional guard functions (conditions) which
+    check if the transition should be taken. A state can have multiple
+    transitions with the same trigger when all use guard functions.
+  * Fixed: When `reset()`ting, the `onExit` of the old state and the `onEnter`
+    of the initial state are now called.
 * **v2.0.0**
   * Breaking: Constructor now takes a parameters object as second parameter to
     provide additional options like logger.
