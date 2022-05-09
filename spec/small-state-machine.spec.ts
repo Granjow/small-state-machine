@@ -207,6 +207,23 @@ describe( 'Small state machine', () => {
         } );
     } );
 
+    describe( 'Inspection', () => {
+        it( 'provides states and events', () => {
+            const sm : SmallStateMachine<States, Triggers> = new SmallStateMachine( States.A );
+            sm.configure( States.A )
+                .permit( Triggers.b, States.B, { description: 'X' } );
+
+            const transitionMap = sm.transitionMap;
+            const desc = transitionMap.get( States.A );
+            expect( desc ).toBeDefined();
+            const trans = desc!.get( Triggers.b );
+            expect( trans ).toBeDefined();
+            expect( trans![ 0 ].description ).toBe( 'X' );
+            expect( trans![ 0 ].targetState ).toBe( States.B );
+            expect( trans![ 0 ].guard ).not.toBeDefined();
+        } );
+    } );
+
     describe( 'Error handling', () => {
         it( 'throws if target state is not configured', () => {
             const sm : SmallStateMachine<States, Triggers> = new SmallStateMachine( States.A );

@@ -1,8 +1,9 @@
 import { ILogger } from "./i-logger";
 
-interface TransitionDescription<States> {
+export interface TransitionDescription<States> {
     targetState : States;
     guard? : () => boolean;
+    description? : string;
 }
 
 interface TransitionResult<States> {
@@ -10,16 +11,28 @@ interface TransitionResult<States> {
     ignoreTransition : boolean;
 }
 
-
 export interface TransitionOptions {
     guard? : () => boolean;
+    description? : string;
 }
 
 export class SmallStateDescription<States, Triggers> {
 
+    private readonly _state : States;
+    private readonly _ignoredTriggers : Set<Triggers> = new Set();
+    private readonly _transitions : Map<Triggers, TransitionDescription<States>[]> = new Map();
+    private readonly _logger : ILogger | undefined;
+
+    private _entryHandler : Function | undefined;
+    private _exitHandler : Function | undefined;
+
     constructor( state : States, logger? : ILogger ) {
         this._state = state;
         this._logger = logger;
+    }
+
+    get transitions() : Map<Triggers, TransitionDescription<States>[]> {
+        return new Map( this._transitions );
     }
 
     /**
@@ -64,6 +77,7 @@ export class SmallStateDescription<States, Triggers> {
         transitions.push( {
             targetState: targetState,
             guard: opts?.guard,
+            description: opts?.description,
         } );
 
         this._transitions.set( trigger, transitions );
@@ -159,12 +173,4 @@ export class SmallStateDescription<States, Triggers> {
             }
         }
     }
-
-    private _entryHandler : Function | undefined;
-    private _exitHandler : Function | undefined;
-
-    private readonly _state : States;
-    private readonly _ignoredTriggers : Set<Triggers> = new Set();
-    private readonly _transitions : Map<Triggers, TransitionDescription<States>[]> = new Map();
-    private readonly _logger : ILogger | undefined;
 }

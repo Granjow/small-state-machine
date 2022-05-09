@@ -33,6 +33,10 @@ machine.fire( Triggers.makeClouds );
 
 ## Changelog
 
+* **v2.2.0**
+  * Added: Transitions can now have descriptions.
+  * Added: `SmallStateMachine.transitionMap()` returns states with the corresponding
+    transitions, allowing to get information about the state machine configuration.
 * **v2.1.0**
   * Added: Transition can now have optional guard functions (conditions) which
     check if the transition should be taken. A state can have multiple

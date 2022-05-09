@@ -1,6 +1,6 @@
 import { EventEmitter } from "events";
 import { ILogger } from "./i-logger";
-import { SmallStateDescription } from "./small-state-description";
+import { SmallStateDescription, TransitionDescription } from "./small-state-description";
 
 export interface SmallStateMachineArgs {
     logger? : ILogger;
@@ -23,6 +23,16 @@ export class SmallStateMachine<States extends ( string | number ), Triggers exte
 
     get currentState() : States {
         return this._currentState;
+    }
+
+    get transitionMap() : Map<States, Map<Triggers, TransitionDescription<States>[]>> {
+        const map : Map<States, Map<Triggers, TransitionDescription<States>[]>> = new Map();
+
+        for ( const [ k, v ] of this._stateDescriptions ) {
+            map.set( k, v.transitions );
+        }
+
+        return map;
     }
 
     /**
