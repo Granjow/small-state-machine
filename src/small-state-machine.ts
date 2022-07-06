@@ -77,8 +77,10 @@ export class SmallStateMachine<States extends ( string | number ), Triggers exte
     }
 
     /**
-     * Attaches a callback to state changes, i.e. when
-     * @param cb
+     * Attaches a callback to state changes.
+     * It is triggered after the new state has been entered.
+     *
+     * @param cb Callback to add to the event emitter
      */
     onStateChange( cb : ( newState : States ) => void ) : void {
         this._events.on( 'new-state', cb );
@@ -109,13 +111,22 @@ export class SmallStateMachine<States extends ( string | number ), Triggers exte
         }
 
         this.currentStateDescription.exit();
-        targetStateDescription.enter();
 
-        if ( this._currentState !== targetState ) {
-            setImmediate( () => this._events.emit( 'new-state', targetState ) );
+        const stateChanged = this._currentState !== targetState;
+        const exitedState = this._currentState;
+        this._currentState = targetState;
+
+        try {
+            targetStateDescription.enter();
+
+            if ( stateChanged ) {
+                setImmediate( () => this._events.emit( 'new-state', targetState ) );
+            }
+        } catch ( err : any ) {
+            this._currentState = exitedState;
+            throw err;
         }
 
-        this._currentState = targetState;
     }
 
     private handleFire( trigger : Triggers ) : void {

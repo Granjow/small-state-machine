@@ -39,6 +39,10 @@ export class SmallStateDescription<States, Triggers> {
      * Defines a callback that is called when entering this state.
      * Note that only one entry callback can be used, and it will not be called when the state machine is initialised
      * with its initial state.
+     *
+     * The state machine will already expose the new state as current state.
+     *
+     * @see onExit
      * @param f Callback
      */
     onEntry( f : () => void ) : SmallStateDescription<States, Triggers> {
@@ -48,7 +52,7 @@ export class SmallStateDescription<States, Triggers> {
 
     /**
      * Defines a callback that is called when leaving this state, before entering the next state.
-     * See #onEntry
+     * @see onEntry
      * @param f Callback
      */
     onExit( f : () => void ) : SmallStateDescription<States, Triggers> {

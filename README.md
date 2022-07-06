@@ -33,6 +33,10 @@ machine.fire( Triggers.makeClouds );
 
 ## Changelog
 
+* **v3.0.0**
+  * Breaking: `onEntry()` handlers now see the new (entered) state as current state.
+    Prior to this version, `SmallStateMachine.currentState` was still set on the
+    old state which hase been exited.
 * **v2.2.0**
   * Added: Transitions can now have descriptions.
   * Added: `SmallStateMachine.transitionMap()` returns states with the corresponding
