@@ -58,6 +58,22 @@ describe( 'Small state machine', () => {
         expect( sm.currentState ).toBe( States.A );
     } );
 
+    describe( 'Various Transitions', () => {
+
+        it( 'can re-enter a state', () => {
+            let reentryCount = 0;
+            const sm : SmallStateMachine<States, Triggers> = new SmallStateMachine( States.A );
+            sm.configure( States.A )
+                .onEntry( () => reentryCount++ )
+                .permit( Triggers.a, States.A );
+
+            expect( reentryCount ).toBe( 0 );
+            sm.fire( Triggers.a );
+            expect( reentryCount ).toBe( 1 );
+        } );
+
+    } );
+
     describe( 'Setup', () => {
         it( 'throws when ignoring a trigger twice', () => {
             const sm : SmallStateMachine<States, Triggers> = new SmallStateMachine( States.A );

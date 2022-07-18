@@ -63,6 +63,8 @@ export class SmallStateDescription<States, Triggers> {
     /**
      * Adds a state transition to the target state when the trigger/event is fired.
      *
+     * A transition can also lead to the same state again, whereby exit/entry handlers are called.
+     *
      * When firing a trigger which is not permitted for that state, an error is thrown
      * unless the trigger is ignored with #ignore or when the state machine is configured
      * to ignore unconfigured transitions.
