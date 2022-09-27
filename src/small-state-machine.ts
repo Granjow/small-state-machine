@@ -95,6 +95,13 @@ export class SmallStateMachine<States extends ( string | number ), Triggers exte
         }
     }
 
+    /**
+     * Returns the logger, if configured.
+     */
+    protected get logger() : ILogger | undefined {
+        return this._logger;
+    }
+
     private get currentStateDescription() : SmallStateDescription<States, Triggers> {
         const currentStateDescription = this._stateDescriptions.get( this._currentState );
         if ( !currentStateDescription ) {

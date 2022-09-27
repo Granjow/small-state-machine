@@ -33,6 +33,8 @@ machine.fire( Triggers.makeClouds );
 
 ## Changelog
 
+* **v3.1.0**
+  * Added: Expose logger for subclasses extending SmallStateMachine
 * **v3.0.0**
   * Breaking: `onEntry()` handlers now see the new (entered) state as current state.
     Prior to this version, `SmallStateMachine.currentState` was still set on the
