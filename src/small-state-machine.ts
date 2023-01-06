@@ -21,6 +21,10 @@ export class SmallStateMachine<States extends ( string | number ), Triggers exte
         this._ignoreUnconfiguredEvents = args?.ignoreUnconfiguredTriggers === true;
     }
 
+    get initialState() : States {
+        return this._initialState;
+    }
+
     get currentState() : States {
         return this._currentState;
     }
@@ -36,7 +40,10 @@ export class SmallStateMachine<States extends ( string | number ), Triggers exte
     }
 
     /**
-     * Configure the given state, describing e.g. permitted transitions and callbacks
+     * Configure the given state, describing e.g. permitted transitions and callbacks.
+     *
+     * This method is a getter which returns a state description object which can be configured,
+     * and it can thus be called multiple times on the same state.
      *
      * @param state State to configure
      */

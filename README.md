@@ -33,9 +33,12 @@ machine.fire( Triggers.makeClouds );
 
 ## Changelog
 
-* **v3.1.0**
+* **v3.2.0** (2023-01-06)
+  * Added: Initial state is now exposed on `StateMachine.initialState`
+  * Changed: Code documentation improved
+* **v3.1.0** (2022-09-27)
   * Added: Expose logger for subclasses extending SmallStateMachine
-* **v3.0.0**
+* **v3.0.0** (2022-07-06)
   * Breaking: `onEntry()` handlers now see the new (entered) state as current state.
     Prior to this version, `SmallStateMachine.currentState` was still set on the
     old state which hase been exited.

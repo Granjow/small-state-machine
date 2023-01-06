@@ -146,6 +146,7 @@ export class SmallStateDescription<States, Triggers> {
     enter() {
         this._logger?.trace( `Entering state ${this._state} …` );
         if ( this._entryHandler ) {
+            this._logger?.trace( ` Running onEnter()` );
             this._entryHandler();
         }
         this._logger?.trace( `Entered state ${this._state}` );
@@ -154,6 +155,7 @@ export class SmallStateDescription<States, Triggers> {
     exit() {
         this._logger?.trace( `Exiting state ${this._state} …` );
         if ( this._exitHandler ) {
+            this._logger?.trace( ` Running onExit()` );
             this._exitHandler();
         }
         this._logger?.trace( `Exited state ${this._state}` );
