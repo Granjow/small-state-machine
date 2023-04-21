@@ -70,6 +70,8 @@ describe( 'Small state machine', () => {
             expect( reentryCount ).toBe( 0 );
             sm.fire( Triggers.a );
             expect( reentryCount ).toBe( 1 );
+            sm.fire( Triggers.a );
+            expect( reentryCount ).toBe( 2 );
         } );
 
     } );
