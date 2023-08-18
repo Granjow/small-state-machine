@@ -11,7 +11,8 @@ export class SmallStateMachine<States extends ( string | number ), Triggers exte
 
     /**
      * Creates a new state which uses the provided state as initial state.
-     * @param initialState Initial state
+     * @param initialState Initial state. Note that the `onEntry` action is not called initially,
+     * only when entering the initial state again.
      * @param args Provide additional options for the state machine like a logger
      */
     constructor( initialState : States, args? : SmallStateMachineArgs ) {

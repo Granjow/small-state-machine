@@ -21,6 +21,14 @@ describe( 'Small state machine', () => {
         expect( state.currentState ).toBe( States.A );
     } );
 
+    it( 'does not run onEntry on the initial state', () => {
+        const fn = jest.fn();
+        const sm : SmallStateMachine<States, Triggers> = new SmallStateMachine( States.A );
+        sm.configure( States.A )
+            .onEntry( fn );
+        expect( fn ).not.toHaveBeenCalled();
+    } );
+
     it( 'fires the exit condition', ( done ) => {
         const sm : SmallStateMachine<States, Triggers> = new SmallStateMachine( States.A );
         sm.configure( States.A )
