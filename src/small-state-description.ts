@@ -11,6 +11,11 @@ interface TransitionResult<States> {
     ignoreTransition : boolean;
 }
 
+interface HandlerDescription {
+    fn : () => void;
+    name : string;
+}
+
 export interface TransitionOptions {
     guard? : () => boolean;
     description? : string;
@@ -23,8 +28,8 @@ export class SmallStateDescription<States, Triggers> {
     private readonly _transitions : Map<Triggers, TransitionDescription<States>[]> = new Map();
     private readonly _logger : ILogger | undefined;
 
-    private _entryHandler : Function | undefined;
-    private _exitHandler : Function | undefined;
+    private _entryHandlers : HandlerDescription[] = [];
+    private _exitHandlers : HandlerDescription[] = [];
 
     constructor( state : States, logger? : ILogger ) {
         this._state = state;
@@ -37,26 +42,36 @@ export class SmallStateDescription<States, Triggers> {
 
     /**
      * Defines a callback that is called when entering this state.
-     * Note that only one entry callback can be used, and it will not be called when the state machine is initialised
-     * with its initial state.
      *
-     * The state machine will already expose the new state as current state.
+     * Note that initially the state machine is already in the initial state,
+     * so the onEntry handler of this initial state will not be called on construction.
+     *
+     * The state machine will already expose the new state as current state in the callback.
      *
      * @see onExit
      * @param f Callback
+     * @param handlerName Name of the callback function, used for logging
      */
-    onEntry( f : () => void ) : SmallStateDescription<States, Triggers> {
-        this._entryHandler = f;
+    onEntry( f : () => void, handlerName? : string ) : SmallStateDescription<States, Triggers> {
+        this._entryHandlers.push( {
+            fn: f,
+            name: handlerName ?? `onEntry handler ${this._entryHandlers.length + 1}`,
+        } );
         return this;
     }
 
     /**
      * Defines a callback that is called when leaving this state, before entering the next state.
+     *
      * @see onEntry
      * @param f Callback
+     * @param handlerName Name of the callback function, used for logging
      */
-    onExit( f : () => void ) : SmallStateDescription<States, Triggers> {
-        this._exitHandler = f;
+    onExit( f : () => void, handlerName? : string ) : SmallStateDescription<States, Triggers> {
+        this._exitHandlers.push( {
+            fn: f,
+            name: handlerName ?? `onEntry handler ${this._exitHandlers.length + 1}`,
+        } );
         return this;
     }
 
@@ -145,18 +160,18 @@ export class SmallStateDescription<States, Triggers> {
 
     enter() {
         this._logger?.trace( `Entering state ${this._state} …` );
-        if ( this._entryHandler ) {
-            this._logger?.trace( ` Running onEnter()` );
-            this._entryHandler();
+        for ( const handler of this._entryHandlers ) {
+            this._logger?.trace( ` Running onEnter(): ${handler.name}` );
+            handler.fn();
         }
         this._logger?.trace( `Entered state ${this._state}` );
     }
 
     exit() {
         this._logger?.trace( `Exiting state ${this._state} …` );
-        if ( this._exitHandler ) {
-            this._logger?.trace( ` Running onExit()` );
-            this._exitHandler();
+        for ( const handler of this._exitHandlers ) {
+            this._logger?.trace( ` Running onExit(): ${handler.name}` );
+            handler.fn();
         }
         this._logger?.trace( `Exited state ${this._state}` );
     }

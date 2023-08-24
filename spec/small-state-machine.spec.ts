@@ -97,6 +97,53 @@ describe( 'Small state machine', () => {
         } );
     } );
 
+    describe( 'Callbacks', () => {
+        it( 'allows multiple onEntry callbacks', () => {
+
+            // Arrange
+            const cb1 = jest.fn();
+            const cb2 = jest.fn();
+
+            const sm : SmallStateMachine<States, Triggers> = new SmallStateMachine( States.A );
+            sm.configure( States.A )
+                .permit( Triggers.a, States.B )
+            ;
+            sm.configure( States.B )
+                .onEntry( cb1 )
+                .onEntry( cb2 )
+            ;
+
+            // Act
+            sm.fire( Triggers.a );
+
+            // Assert
+            expect( cb1 ).toHaveBeenCalledTimes( 1 );
+            expect( cb2 ).toHaveBeenCalledTimes( 1 );
+        } );
+        it( 'allows multiple onExit callbacks', () => {
+
+            // Arrange
+            const cb1 = jest.fn();
+            const cb2 = jest.fn();
+
+            const sm : SmallStateMachine<States, Triggers> = new SmallStateMachine( States.A );
+            sm.configure( States.A )
+                .permit( Triggers.a, States.B )
+                .onExit( cb1 )
+                .onExit( cb2 )
+            ;
+            sm.configure( States.B )
+            ;
+
+            // Act
+            sm.fire( Triggers.a );
+
+            // Assert
+            expect( cb1 ).toHaveBeenCalledTimes( 1 );
+            expect( cb2 ).toHaveBeenCalledTimes( 1 );
+        } );
+    } );
+
     describe( 'Recursive fire()', () => {
 
         it( 'is disallowed and fires AsyncError', () => {

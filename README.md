@@ -33,6 +33,9 @@ machine.fire( Triggers.makeClouds );
 
 ## Changelog
 
+* **v3.3.0**
+  * Added: States can now have multiple `onEntry` and `onExit` callbacks
+  * Added: Callbacks can have an optional name
 * **v3.2.0** (2023-01-06)
   * Added: Initial state is now exposed on `StateMachine.initialState`
   * Changed: Code documentation improved
