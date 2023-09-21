@@ -161,7 +161,7 @@ export class SmallStateDescription<States, Triggers> {
     enter() {
         this._logger?.trace( `Entering state ${this._state} …` );
         for ( const handler of this._entryHandlers ) {
-            this._logger?.trace( ` Running onEnter(): ${handler.name}` );
+            this._logger?.trace( ` Running onEntry(): ${handler.name}` );
             handler.fn();
         }
         this._logger?.trace( `Entered state ${this._state}` );
