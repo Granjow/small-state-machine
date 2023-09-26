@@ -41,7 +41,9 @@ export class SmallStateDescription<States, Triggers> {
     }
 
     /**
-     * Defines a callback that is called when entering this state.
+     * Adds a callback that is called when entering this state.
+     *
+     * This function can be called multiple times to add multiple callbacks.
      *
      * Note that initially the state machine is already in the initial state,
      * so the onEntry handler of this initial state will not be called on construction.
@@ -62,6 +64,8 @@ export class SmallStateDescription<States, Triggers> {
 
     /**
      * Defines a callback that is called when leaving this state, before entering the next state.
+     *
+     * This function can be called multiple times to add multiple callbacks.
      *
      * @see onEntry
      * @param f Callback
