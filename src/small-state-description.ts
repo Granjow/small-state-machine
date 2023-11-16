@@ -139,7 +139,7 @@ export class SmallStateDescription<States, Triggers> {
                     ignoreTransition: true,
                 };
             }
-            throw new Error( `No target state for trigger ${trigger} from state ${this._state}` );
+            throw new Error( `No target state from ${this._state} and trigger ${trigger}` );
         }
 
         const applicableTransition = transitions.find( ( transition ) => {
