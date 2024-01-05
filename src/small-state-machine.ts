@@ -96,6 +96,9 @@ export class SmallStateMachine<States extends ( string | number ), Triggers exte
 
     /**
      * Resets the state machine back to the initial state.
+     *
+     * This also triggers the onExit condition of the current state
+     * and the onEntry condition of the initial state.
      */
     reset() : void {
         if ( this._currentState !== this._initialState ) {
