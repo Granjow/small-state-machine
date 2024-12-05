@@ -33,6 +33,10 @@ machine.fire( Triggers.makeClouds );
 
 ## Changelog
 
+* **v4.0.0**
+  * Added: Log level is now configurable
+  * Breaking: `SmallStateDescription` requires a `Logger` object.
+    This is only relevant when you extended this class.
 * **v3.3.0**
   * Added: States can now have multiple `onEntry` and `onExit` callbacks
   * Added: Callbacks can have an optional name

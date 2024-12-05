@@ -1,4 +1,4 @@
-import { ILogger } from "./i-logger";
+import { IInternalLogger } from "./i-internal-logger";
 
 export interface TransitionDescription<States> {
     targetState : States;
@@ -26,14 +26,14 @@ export class SmallStateDescription<States, Triggers> {
     private readonly _state : States;
     private readonly _ignoredTriggers : Set<Triggers> = new Set();
     private readonly _transitions : Map<Triggers, TransitionDescription<States>[]> = new Map();
-    private readonly _logger : ILogger | undefined;
+    private readonly _log : IInternalLogger;
 
     private _entryHandlers : HandlerDescription[] = [];
     private _exitHandlers : HandlerDescription[] = [];
 
-    constructor( state : States, logger? : ILogger ) {
+    constructor( state : States, log : IInternalLogger ) {
         this._state = state;
-        this._logger = logger;
+        this._log = log
     }
 
     get transitions() : Map<Triggers, TransitionDescription<States>[]> {
@@ -163,21 +163,21 @@ export class SmallStateDescription<States, Triggers> {
     }
 
     enter() {
-        this._logger?.trace( `Entering state ${this._state} …` );
+        this._log.log( `Entering state ${this._state} …` );
         for ( const handler of this._entryHandlers ) {
-            this._logger?.trace( ` Running onEntry(): ${handler.name}` );
+            this._log.log( ` Running onEntry(): ${handler.name}` );
             handler.fn();
         }
-        this._logger?.trace( `Entered state ${this._state}` );
+        this._log.log( `Entered state ${this._state}` );
     }
 
     exit() {
-        this._logger?.trace( `Exiting state ${this._state} …` );
+        this._log.log( `Exiting state ${this._state} …` );
         for ( const handler of this._exitHandlers ) {
-            this._logger?.trace( ` Running onExit(): ${handler.name}` );
+            this._log.log( ` Running onExit(): ${handler.name}` );
             handler.fn();
         }
-        this._logger?.trace( `Exited state ${this._state}` );
+        this._log.log( `Exited state ${this._state}` );
     }
 
     /**

@@ -1,13 +1,27 @@
 import { EventEmitter } from "events";
 import { ILogger } from "./i-logger";
 import { SmallStateDescription, TransitionDescription } from "./small-state-description";
+import { IInternalLogger, TLogLevel } from "./i-internal-logger";
+import { Logger } from "./logger";
+
 
 export interface SmallStateMachineArgs {
     logger? : ILogger;
+    logLevel? : TLogLevel;
     ignoreUnconfiguredTriggers? : boolean;
 }
 
 export class SmallStateMachine<States extends ( string | number ), Triggers extends ( string | number )> {
+
+    private readonly _initialState : States;
+
+    private readonly _events = new EventEmitter();
+    private readonly _log : IInternalLogger;
+    private readonly _ignoreUnconfiguredEvents : boolean;
+
+    private _fireRunning : string | number | undefined = undefined;
+    private _stateDescriptions : Map<States, SmallStateDescription<States, Triggers>> = new Map();
+    private _currentState : States;
 
     /**
      * Creates a new state which uses the provided state as initial state.
@@ -16,7 +30,7 @@ export class SmallStateMachine<States extends ( string | number ), Triggers exte
      * @param args Provide additional options for the state machine like a logger
      */
     constructor( initialState : States, args? : SmallStateMachineArgs ) {
-        this._logger = args?.logger;
+        this._log = new Logger( args?.logger, args?.logLevel );
         this._initialState = initialState;
         this._currentState = initialState;
         this._ignoreUnconfiguredEvents = args?.ignoreUnconfiguredTriggers === true;
@@ -49,7 +63,7 @@ export class SmallStateMachine<States extends ( string | number ), Triggers exte
      * @param state State to configure
      */
     configure( state : States ) : SmallStateDescription<States, Triggers> {
-        const description = this._stateDescriptions.get( state ) ?? new SmallStateDescription( state, this._logger );
+        const description = this._stateDescriptions.get( state ) ?? new SmallStateDescription( state, this._log );
         this._stateDescriptions.set( state, description );
         return description;
     }
@@ -65,7 +79,7 @@ export class SmallStateMachine<States extends ( string | number ), Triggers exte
      * @param trigger Event to trigger
      */
     fire( trigger : Triggers ) {
-        this._logger?.trace( `Entering fire(${trigger}) in state ${this._currentState}` );
+        this._log.log( `Entering fire(${trigger}) in state ${this._currentState}` );
         if ( this._fireRunning !== undefined ) {
             throw new AsyncError( `Error in fire(${trigger}): fire(${this._fireRunning}) is already running! This probably means that a state change was triggered from an enter() or exit() callback. Use setImmediate() or setTimeout() for triggering inside a callback.` );
         }
@@ -79,7 +93,7 @@ export class SmallStateMachine<States extends ( string | number ), Triggers exte
         }
         this._fireRunning = undefined;
 
-        this._logger?.trace( `Exiting fire(${trigger}) in state ${this._currentState}. Throwing error: ${error !== undefined}` );
+        this._log.log( `Exiting fire(${trigger}) in state ${this._currentState}. Throwing error: ${error !== undefined}` );
 
         if ( error ) throw error;
     }
@@ -110,7 +124,11 @@ export class SmallStateMachine<States extends ( string | number ), Triggers exte
      * Returns the logger, if configured.
      */
     protected get logger() : ILogger | undefined {
-        return this._logger;
+        return this._log.logger;
+    }
+
+    protected get internalLogger() : IInternalLogger {
+        return this._log;
     }
 
     private get currentStateDescription() : SmallStateDescription<States, Triggers> {
@@ -157,17 +175,6 @@ export class SmallStateMachine<States extends ( string | number ), Triggers exte
         this.transitionToState( targetState );
     }
 
-
-    private _stateDescriptions : Map<States, SmallStateDescription<States, Triggers>> = new Map();
-    private _currentState : States;
-
-    private _fireRunning : string | number | undefined = undefined;
-
-    private readonly _initialState : States;
-
-    private readonly _events = new EventEmitter();
-    private readonly _logger : ILogger | undefined;
-    private readonly _ignoreUnconfiguredEvents : boolean;
 }
 
 export class AsyncError extends Error {
