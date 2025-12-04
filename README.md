@@ -19,6 +19,8 @@ enum Triggers {
 
 const machine = new SmallStateMachine<States, Triggers>( States.Sunshine );
 
+// Define transitions between sunshine and rain,
+// and run actions when entering/exiting sunshine
 machine.configure( States.Sunshine )
     .onEntry( () => console.log( 'Let there be light!' ) )
     .onExit( () => console.log( 'I will be back!' ) )
@@ -26,13 +28,21 @@ machine.configure( States.Sunshine )
 machine.configure( States.Rain )
     .permit( Triggers.dispelClouds, States.Sunshine );
 
+// Transition back to sunshine after one second
+machine.addAutoTransition( States.Rain, States.Sunshine, Triggers.dispelClouds, 1000 );
+
+// Do something when the state changes
 machine.onStateChange( ( state ) => console.log( `Now in state ${state}!` ) );
 
+// Trigger a state change
 machine.fire( Triggers.makeClouds );
 ```
 
 ## Changelog
 
+* **v4.1.0**
+  * Added: `SmallStateMachine.addAutoTransition(from, to, trigger, timeout)` and
+    `stopAllAutoTransitions()` to automatically continue to a new state after a timeout.
 * **v4.0.0**
   * Added: Log level is now configurable
   * Breaking: `SmallStateDescription` requires a `Logger` object.

@@ -19,6 +19,8 @@ export class SmallStateMachine<States extends ( string | number ), Triggers exte
     private readonly _log : IInternalLogger;
     private readonly _ignoreUnconfiguredEvents : boolean;
 
+    private readonly _timeouts: Map<Symbol, NodeJS.Timeout | undefined> = new Map();
+
     private _fireRunning : string | number | undefined = undefined;
     private _stateDescriptions : Map<States, SmallStateDescription<States, Triggers>> = new Map();
     private _currentState : States;
@@ -118,6 +120,49 @@ export class SmallStateMachine<States extends ( string | number ), Triggers exte
         if ( this._currentState !== this._initialState ) {
             this.transitionToState( this._initialState );
         }
+    }
+
+    /**
+     * Automatically transition from one state to another state with the given trigger
+     * after the defined timeout.
+     *
+     * @param fromState When entering this state, the timeout starts.
+     * When this state is exited by something else than the automatic transition, the timeout is stopped.
+     * When entering this state again, the timeout is restarted with the original timeout duration.
+     * @param toState Target state to transition to after the defined timeout.
+     * @param byEvent Trigger to use for transitioning to the target state.
+     * @param timeoutMillis Timeout for the transition.
+     *
+     * @see stopAllAutoTransitions
+     */
+    addAutoTransition( fromState: States, toState: States, byEvent: Triggers, timeoutMillis: number ): void {
+
+        const timerSymbol = Symbol();
+
+        this.configure( fromState )
+            .onEntry( () => {
+                const timeout = setTimeout( () => {
+                    this._log.log( `Firing auto transition to ${toState} with event ${byEvent} after ${timeoutMillis} ms` );
+                    this.fire( byEvent );
+                }, timeoutMillis );
+                this._timeouts.set( timerSymbol, timeout );
+            }, 'Start auto transition' )
+            .onExit( () => {
+                clearTimeout( this._timeouts.get( timerSymbol ) );
+            }, 'Clear auto transition timeout' )
+        ;
+    }
+
+    /**
+     * Stops all current timeouts which would trigger a transition to a different state.
+     *
+     * This does not remove the automatic transitions that have been configured with addAutoTransition(),
+     * it only stops timeouts.
+     */
+    stopAllAutoTransitions(): void {
+        this._timeouts.forEach( ( timeout ) => {
+            if ( timeout ) clearTimeout( timeout );
+        } );
     }
 
     /**
