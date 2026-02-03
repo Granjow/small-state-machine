@@ -295,6 +295,19 @@ describe( 'Small state machine', () => {
             expect( trans![ 0 ].targetState ).toBe( States.B );
             expect( trans![ 0 ].guard ).not.toBeDefined();
         } );
+        it( 'provides a list of descriptions', () => {
+            const sm : SmallStateMachine<States, Triggers> = new SmallStateMachine( States.A );
+            sm.configure( States.A )
+                .describe( 'I am A' );
+            sm.configure( States.B )
+                .describe( 'I am B' );
+
+            const map = sm.stateDescriptions;
+
+            expect( map.size ).toBe( 2 );
+            expect( map.get( States.A ) ).toBe( 'I am A' );
+            expect( map.get( States.B ) ).toBe( 'I am B' );
+        } );
     } );
 
     describe( 'Error handling', () => {

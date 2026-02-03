@@ -28,6 +28,7 @@ export class SmallStateDescription<States, Triggers> {
     private readonly _transitions : Map<Triggers, TransitionDescription<States>[]> = new Map();
     private readonly _log : IInternalLogger;
 
+    private _description : string = '';
     private _entryHandlers : HandlerDescription[] = [];
     private _exitHandlers : HandlerDescription[] = [];
 
@@ -38,6 +39,13 @@ export class SmallStateDescription<States, Triggers> {
 
     get transitions() : Map<Triggers, TransitionDescription<States>[]> {
         return new Map( this._transitions );
+    }
+
+    /**
+     * See #describe()
+     */
+    get description() : string {
+        return this._description;
     }
 
     /**
@@ -77,6 +85,13 @@ export class SmallStateDescription<States, Triggers> {
             name: handlerName ?? `onEntry handler ${this._exitHandlers.length + 1}`,
         } );
         return this;
+    }
+
+    /**
+     * Adds a text description to this state.
+     */
+    describe( description : string ) : void {
+        this._description = description;
     }
 
     /**

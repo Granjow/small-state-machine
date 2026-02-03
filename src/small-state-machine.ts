@@ -19,7 +19,7 @@ export class SmallStateMachine<States extends ( string | number ), Triggers exte
     private readonly _log : IInternalLogger;
     private readonly _ignoreUnconfiguredEvents : boolean;
 
-    private readonly _timeouts: Map<Symbol, NodeJS.Timeout | undefined> = new Map();
+    private readonly _timeouts : Map<Symbol, NodeJS.Timeout | undefined> = new Map();
 
     private _fireRunning : string | number | undefined = undefined;
     private _stateDescriptions : Map<States, SmallStateDescription<States, Triggers>> = new Map();
@@ -51,6 +51,20 @@ export class SmallStateMachine<States extends ( string | number ), Triggers exte
 
         for ( const [ k, v ] of this._stateDescriptions ) {
             map.set( k, v.transitions );
+        }
+
+        return map;
+    }
+
+    /**
+     * Get the textual description for each state.
+     * The description is set when configuring a state; see SmallStateDescription.describe().
+     */
+    get stateDescriptions() : Map<States, string> {
+        const map : Map<States, string> = new Map();
+
+        for ( const [ k, v ] of this._stateDescriptions ) {
+            map.set( k, v.description );
         }
 
         return map;
@@ -135,7 +149,7 @@ export class SmallStateMachine<States extends ( string | number ), Triggers exte
      *
      * @see stopAllAutoTransitions
      */
-    addAutoTransition( fromState: States, toState: States, byEvent: Triggers, timeoutMillis: number ): void {
+    addAutoTransition( fromState : States, toState : States, byEvent : Triggers, timeoutMillis : number ) : void {
 
         const timerSymbol = Symbol();
 
@@ -159,7 +173,7 @@ export class SmallStateMachine<States extends ( string | number ), Triggers exte
      * This does not remove the automatic transitions that have been configured with addAutoTransition(),
      * it only stops timeouts.
      */
-    stopAllAutoTransitions(): void {
+    stopAllAutoTransitions() : void {
         this._timeouts.forEach( ( timeout ) => {
             if ( timeout ) clearTimeout( timeout );
         } );

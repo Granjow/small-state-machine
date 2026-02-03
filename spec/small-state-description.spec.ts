@@ -82,6 +82,15 @@ describe( 'Small state description', () => {
         } )
     } );
 
+    describe( 'Description', () => {
+
+        it( 'is returned', () => {
+            const desc : SmallStateDescription<States, Events> = new SmallStateDescription( States.A, log );
+            desc.describe( 'I was here' );
+            expect( desc.description ).toBe( 'I was here' );
+        } );
+    } );
+
     describe( 'Logging', () => {
 
         it( 'logs on enter()', () => {
