@@ -84,9 +84,11 @@ describe( 'Small state description', () => {
 
     describe( 'Description', () => {
 
-        it( 'is returned', () => {
+        it( 'is returned and can be chained', () => {
             const desc : SmallStateDescription<States, Events> = new SmallStateDescription( States.A, log );
-            desc.describe( 'I was here' );
+            desc
+                .describe( 'I was here first' )
+                .describe( 'I was here' );
             expect( desc.description ).toBe( 'I was here' );
         } );
     } );

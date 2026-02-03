@@ -90,8 +90,9 @@ export class SmallStateDescription<States, Triggers> {
     /**
      * Adds a text description to this state.
      */
-    describe( description : string ) : void {
+    describe( description : string ) : this {
         this._description = description;
+        return this;
     }
 
     /**

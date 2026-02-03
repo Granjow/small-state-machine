@@ -40,17 +40,17 @@ machine.fire( Triggers.makeClouds );
 
 ## Changelog
 
-* **v4.2.0** (2026-02-03)
+* **v4.2.1** (2026-02-03)
   * Added: `SmallStateDescription.describe('I am a state')` adds a text description to states
   * Changed: Dependencies updated
-* **v4.1.0**
+* **v4.1.0** (2025-12-04)
   * Added: `SmallStateMachine.addAutoTransition(from, to, trigger, timeout)` and
     `stopAllAutoTransitions()` to automatically continue to a new state after a timeout.
-* **v4.0.0**
+* **v4.0.0** (2024-12-05)
   * Added: Log level is now configurable
   * Breaking: `SmallStateDescription` requires a `Logger` object.
     This is only relevant when you extended this class.
-* **v3.3.0**
+* **v3.3.0** (2024-08-24)
   * Added: States can now have multiple `onEntry` and `onExit` callbacks
   * Added: Callbacks can have an optional name
 * **v3.2.0** (2023-01-06)
