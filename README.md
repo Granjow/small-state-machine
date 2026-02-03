@@ -40,7 +40,7 @@ machine.fire( Triggers.makeClouds );
 
 ## Changelog
 
-* **v4.2.0**
+* **v4.2.0** (2026-02-03)
   * Added: `SmallStateDescription.describe('I am a state')` adds a text description to states
   * Changed: Dependencies updated
 * **v4.1.0**
